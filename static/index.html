@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sydney Traffic</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Kaushan+Script&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div id="splash-screen" class="splash-screen">
+      <div class="splash-message">Hi! Enjoy a good day!</div>
+    </div>
+
+    <div id="app-shell" class="page-shell is-hidden">
+      <header class="top-bar">
+        <div class="brand">Sydney Traffic</div>
+      </header>
+
+      <main class="layout">
+        <aside class="control-panel">
+          <section class="mode-panel">
+            <button type="button" class="mode-card is-active" data-profile="drive" id="mode-drive">
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 11l1.4-4.1A2 2 0 0 1 8.3 5.5h7.4a2 2 0 0 1 1.9 1.4L19 11h1a1 1 0 0 1 1 1v4h-2a2 2 0 0 1-4 0H9a2 2 0 0 1-4 0H3v-4a1 1 0 0 1 1-1h1zm2.2-3.5L6.5 10h11l-.7-2.5a.7.7 0 0 0-.7-.5H7.9a.7.7 0 0 0-.7.5zM7 15.5a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6zm10 0a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6z"/></svg>
+              </span>
+              <span class="mode-copy">
+                <strong>Drive</strong>
+                <small>Shortest and fastest</small>
+              </span>
+            </button>
+
+            <button type="button" class="mode-card" data-profile="walk" id="mode-walk">
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M13 4.5a1.75 1.75 0 1 1-3.5 0A1.75 1.75 0 0 1 13 4.5zm-1.1 3.1 2.7 1.5c.6.3 1 .9 1.1 1.5l.5 2.8h-1.8l-.4-2.2-1.7-.9-.6 2.1 1.7 1.7c.3.3.5.7.5 1.1V20h-1.8v-4.2l-1.8-1.8-.8 2.9H8.7l1.2-4.4c.1-.5.4-.9.8-1.2l1-3.7z"/></svg>
+              </span>
+              <span class="mode-copy">
+                <strong>Walk</strong>
+                <small>Shortest walking path</small>
+              </span>
+            </button>
+
+            <button type="button" class="mode-card" data-profile="transit" id="mode-transit">
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M7 3h10a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3v2h-2v-2H9v2H7v-2a3 3 0 0 1-3-3V6a3 3 0 0 1 3-3zm0 2a1 1 0 0 0-1 1v4h12V6a1 1 0 0 0-1-1H7zm0 7a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2H7zm2 1.2a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6zm6 0a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6z"/></svg>
+              </span>
+              <span class="mode-copy">
+                <strong>Transit</strong>
+                <small>Bus, train, light rail</small>
+              </span>
+            </button>
+
+            <button type="button" class="mode-card" data-profile="combined" id="mode-combined">
+              <span class="mode-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 6h7v5H4V6zm9 0h7v5h-7V6zM4 13h7v5H4v-5zm11-1a3 3 0 1 1-3 3 3 3 0 0 1 3-3zm0 2a1 1 0 1 0 1 1 1 1 0 0 0-1-1z"/></svg>
+              </span>
+              <span class="mode-copy">
+                <strong>Combined</strong>
+                <small>Transit + walk with limit</small>
+              </span>
+            </button>
+          </section>
+
+          <form id="route-form" class="route-form" autocomplete="off">
+            <div class="input-group">
+              <label for="origin">Origin</label>
+              <div class="input-stack">
+                <input id="origin" name="origin" type="text" placeholder="Start typing your nearby place" required />
+                <div class="suggestions" id="origin-suggestions"></div>
+              </div>
+            </div>
+
+            <div class="input-group">
+              <label for="destination">Destination</label>
+              <div class="input-stack">
+                <input id="destination" name="destination" type="text" placeholder="Start typing a Sydney landmark" required />
+                <div class="suggestions" id="destination-suggestions"></div>
+              </div>
+            </div>
+
+            <div class="button-row">
+              <button type="button" id="locate-btn" class="secondary-button">Use my location</button>
+              <button type="submit" id="route-btn">Show routes</button>
+            </div>
+
+            <div class="walk-limit-field is-hidden" id="walk-limit-field">
+              <label for="max-walk-distance">Max walking distance (km)</label>
+              <input id="max-walk-distance" name="max_walk_distance_km" type="number" min="0" step="0.1" value="1.0" />
+            </div>
+          </form>
+
+          <section class="summary-panel">
+            <div id="status-text" class="status-text">Preparing Sydney traffic map...</div>
+            <div id="results"></div>
+          </section>
+        </aside>
+
+        <section class="map-panel">
+          <div id="weather-banner" class="weather-banner is-hidden"></div>
+          <div id="map"></div>
+        </section>
+      </main>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
